@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -23,7 +24,9 @@ part 'modules.g.dart';
 /// Modules can span pub package boundaries when there are import cycles across
 /// packages.
 @JsonSerializable()
-class Module extends Object with _$ModuleSerializerMixin {
+class Module extends Object
+    with _$ModuleSerializerMixin
+    implements Comparable<Module> {
   /// The JS file for this module.
   AssetId jsId(String jsModuleExtension) =>
       primarySource.changeExtension(jsModuleExtension);
@@ -86,8 +89,10 @@ class Module extends Object with _$ModuleSerializerMixin {
 
   Module(this.primarySource, Iterable<AssetId> sources,
       Iterable<AssetId> directDependencies)
-      : this.sources = sources.toSet(),
-        this.directDependencies = directDependencies.toSet();
+      // Sorted sources and direcDependencies so the representation on disk is
+      // always consistent.
+      : this.sources = new SplayTreeSet.of(sources),
+        this.directDependencies = new SplayTreeSet.of(directDependencies);
 
   /// Find the module definition which contains [library].
   factory Module.forLibrary(LibraryElement library) {
@@ -148,6 +153,19 @@ class Module extends Object with _$ModuleSerializerMixin {
         (m) => m.directDependencies.map((s) => transitiveDeps[s]));
     return orderedModules.map((c) => c.single).toList();
   }
+
+  // Assume that we will never compare inconsistent 'views' of a Modules so that
+  // a modules primary source serves as it's identity.
+
+  @override
+  int compareTo(Module other) => primarySource.compareTo(other.primarySource);
+
+  @override
+  int get hashCode => primarySource.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Module && primarySource == other.primarySource;
 }
 
 /// Returns whether [library] owns the module for it's strongly connected import

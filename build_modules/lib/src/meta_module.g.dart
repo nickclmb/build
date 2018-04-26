@@ -8,10 +8,9 @@ part of 'meta_module.dart';
 
 MetaModule _$MetaModuleFromJson(Map<String, dynamic> json) =>
     new MetaModule((json['m'] as List)
-        .map((e) => new Module.fromJson(e as Map<String, dynamic>))
-        .toList());
+        .map((e) => new Module.fromJson(e as Map<String, dynamic>)));
 
 abstract class _$MetaModuleSerializerMixin {
-  List<Module> get modules;
-  Map<String, dynamic> toJson() => <String, dynamic>{'m': modules};
+  Set<Module> get modules;
+  Map<String, dynamic> toJson() => <String, dynamic>{'m': modules.toList()};
 }

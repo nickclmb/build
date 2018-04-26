@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:analyzer/analyzer.dart';
 import 'package:build/build.dart';
@@ -307,7 +308,7 @@ Future<List<Module>> _computeModules(
 class MetaModule extends Object with _$MetaModuleSerializerMixin {
   @override
   @JsonKey(name: 'm', nullable: false)
-  final List<Module> modules;
+  final Set<Module> modules;
 
   MetaModule(this.modules);
 
@@ -325,13 +326,11 @@ class MetaModule extends Object with _$MetaModuleSerializerMixin {
       }
       assetsByTopLevel[dir].add(asset);
     }
-    var modules = <Module>[];
+    var modules = new SplayTreeSet<Module>();
     for (var key in assetsByTopLevel.keys) {
       modules.addAll(
           await _computeModules(reader, assetsByTopLevel[key], key == 'lib'));
     }
-    // Deterministically output the modules.
-    modules.sort((a, b) => a.primarySource.compareTo(b.primarySource));
     return new MetaModule(modules);
   }
 }
