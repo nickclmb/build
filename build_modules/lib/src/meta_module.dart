@@ -261,8 +261,11 @@ Future<List<Module>> _computeModules(
   var parsedAssetsById = <AssetId, CompilationUnit>{};
   for (var asset in assets) {
     var content = await reader.readAsString(asset);
+    // truncate all the code after imports section because we don't need that here.
+    var iClass = content.indexOf('class ');
+    final newContent = iClass == -1 ? content : content.substring(0, iClass);
     // Skip errors here, dartdevc gives nicer messages.
-    var parsed = parseCompilationUnit(content,
+    var parsed = parseCompilationUnit(newContent,
         name: asset.path, parseFunctionBodies: false, suppressErrors: true);
     parsedAssetsById[asset] = parsed;
 
