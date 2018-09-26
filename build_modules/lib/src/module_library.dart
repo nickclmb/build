@@ -174,24 +174,10 @@ class ModuleLibrary {
       });
 
   List<AssetId> depsForPlatform(DartPlatform platform) {
-    return _deps.followedBy(conditionalDeps.map((conditions) sync* {
-      var selectedImport = conditions[r'$default'];
-      assert(selectedImport != null);
-      yield(selectedImport);
-      for (var condition in conditions.keys) {
-        if (condition == r'$default') continue;
-        if (!condition.startsWith('dart.library.')) {
-          throw UnsupportedError(
-              '$condition not supported for config specific imports. Only the '
-              'dart.library.<name> constants are supported.');
-        }
-        var library = condition.substring('dart.library.'.length);
-        if (platform.supportsLibrary(library)) {
-          yield conditions[condition];
-          return;
-        }
-      }
-    }).expand((assetId) => assetId)).toList();
+    return _deps.followedBy(conditionalDeps
+        .map((conditions) => conditions.values)
+        .expand((assetId) => assetId))
+        .toList();
   }
 }
 
